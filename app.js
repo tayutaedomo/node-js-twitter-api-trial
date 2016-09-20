@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var passport = require('passport');
 
 var routes = require('./routes/index');
 
@@ -20,6 +21,47 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(require('express-session')({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false
+}));
+
+
+// Refer: https://liginc.co.jp/web/programming/node-js/165531
+// Refer: http://qiita.com/itagakishintaro/items/e5a0481b51e6a17b304c
+// passporta setup
+app.use(passport.initialize());
+app.use(passport.session());
+
+var TwitterStrategy = require('passport-twitter').Strategy;
+
+var TWITTER_CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
+var TWITTER_CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
+var OAUTH_CALLBACK_URL = process.env.OAUTH_CALLBACK_URL || 'http://localhost:3000/oauth/callback';
+
+passport.use(new TwitterStrategy({
+    consumerKey: TWITTER_CONSUMER_KEY,
+    consumerSecret: TWITTER_CONSUMER_SECRET,
+    callbackURL: OAUTH_CALLBACK_URL
+  },
+  function (token, tokenSecret, profile, done) {
+    console.log(token, tokenSecret, profile);
+    process.nextTick(function () {
+      return done(null, profile);
+    });
+  }
+));
+
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function (obj, done) {
+  done(null, obj);
+});
+
 
 app.use('/', routes);
 
@@ -56,3 +98,4 @@ app.use(function(err, req, res, next) {
 
 
 module.exports = app;
+
