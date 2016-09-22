@@ -31,6 +31,8 @@ router.get('/search', function(req, res, next) {
 });
 
 router.get('/login', function(req, res, next) {
+  console.log('req.user', req.user);
+
   res.render('login', {
     title: 'Login',
     session: req.session.passport
